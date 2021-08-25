@@ -9,20 +9,12 @@ Game::Game(sf::RenderWindow& wnd)
 	:
 	wnd(wnd),
 	LAG(0),
-	tankgenerationcountdown(100),
-	bonusgenerationcountdown(500),
-	tankgenerationnumber(0),
-	bonusgenerationnumber(0),
-	checkmaploop(0),
-	rerouteloop(0),
-	fortresstimer(0),
-	fortress(false),
-	//printer("graphics\\BetterFont24b.bmp"),
+	parameters(),
+	variables(parameters),
 	gamestatus(MainMenu),
-	MODELUPDATESPERFRAMEUPDATE(0), MSTODRAW(0), MSPERMODELUPDATE(0),
+	performancestats(),
 	eagle(nullptr), tank1(nullptr), tank2(nullptr),
-	lifesleft(2), _soilon(false),
-	cursor(0), listcursor(0), timertocursormove(0), endgametimer(150)
+	cursor(0), listcursor(0), timertocursormove(0)
 {
 	// Load font
 	consolasfont.loadFromFile("CONSOLA.ttf");
@@ -48,52 +40,20 @@ Game::Game(sf::RenderWindow& wnd)
 		closedir(dir);
 	}
 
-
-	int charnum = 0;
-	char byte;
-	std::ifstream mapfile("maps\\map01.txt");
-	for (byte = mapfile.get(); mapfile.good(); byte = mapfile.get())
-	{
-		if (byte == '1') mapobjects.AddMapObject(new Blocks(Vec2(float((charnum % 15) * 40 + 20), float(((charnum - charnum % 15) / 15) * 40 + 20))));
-		if (byte == '2') mapobjects.AddMapObject(new Bricks(Vec2(float((charnum % 15) * 40 + 20), float(((charnum - charnum % 15) / 15) * 40 + 20))));
-		if (byte == '3') mapobjects.AddMapObject(new Water(Vec2(float((charnum % 15) * 40 + 20), float(((charnum - charnum % 15) / 15) * 40 + 20))));
-		if (byte == '4') { eagle = new Eagle(Vec2(float((charnum % 15) * 40 + 20), float(((charnum - charnum % 15) / 15) * 40 + 20))); mapobjects.AddMapObject(eagle); }
-		if (byte == '5') mapobjects.AddMapObject(new Ice(Vec2(float((charnum % 15) * 40 + 20), float(((charnum - charnum % 15) / 15) * 40 + 20))));
-		if (byte == '6') mapobjects.AddMapObject(new Forest(Vec2(float((charnum % 15) * 40 + 20), float(((charnum - charnum % 15) / 15) * 40 + 20))));
-		if ((byte >= '0') && (byte <= '6'))	charnum++;
-	}
-	testreadchars = charnum;
-
-	mapinterpretation = MapInterpretation(60, 60, Vei2(28, 56));
-
-	mapobjects.InterpretMap(mapinterpretation);
-
-	tanks.CreateTank(Vec2(220.f, 580.f), 1, 2, 1);
-	//tanks.CreateTank(Vec2(20.f, 20.f), 4, 2.5f, -1);
-	//tanks.CreateTank(Vec2(180.f, 20.f), 4, 2.5f, -1);
-
 	PREVIOUS_TIME = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 }
 
 void Game::InitializeNewGame(const std::string & filename)
 {
-	tankgenerationcountdown = 100;
-	bonusgenerationcountdown = 500;
-	tankgenerationnumber = 0;
-	bonusgenerationnumber = 0;
-	endgametimer = 150;
-	checkmaploop = 0;
-	rerouteloop = 0;
-	fortresstimer = 0;
-	fortress = false;
+	variables.Reset(parameters);
+
 	mapobjects.MakeEmpty();
 	tanks.MakeEmpty();
 	bonuses.MakeEmpty();
 
-	int charnum = 0;
-	char byte;
 	std::ifstream mapfile(filename);
-	for (byte = mapfile.get(); mapfile.good(); byte = mapfile.get())
+	int charnum = 0;
+	for (char byte = mapfile.get(); mapfile.good(); byte = mapfile.get())
 	{
 		if (byte == '1') mapobjects.AddMapObject(new Blocks(Vec2(float((charnum % 15) * 40 + 20), float(((charnum - charnum % 15) / 15) * 40 + 20))));
 		if (byte == '2') mapobjects.AddMapObject(new Bricks(Vec2(float((charnum % 15) * 40 + 20), float(((charnum - charnum % 15) / 15) * 40 + 20))));
@@ -129,18 +89,18 @@ void Game::Go()
 	LAG += ELAPSED;
 
 	wnd.clear();
-	MODELUPDATESPERFRAMEUPDATE = 0;
-	while (LAG >= MS_PER_UPDATE)
+	performancestats.MODELUPDATESPERFRAMEUPDATE = 0;
+	while (LAG >= MainConstants::MS_PER_UPDATE)
 	{
 		UpdateModel();
-		LAG -= MS_PER_UPDATE;
-		MODELUPDATESPERFRAMEUPDATE++;
+		LAG -= MainConstants::MS_PER_UPDATE;
+		performancestats.MODELUPDATESPERFRAMEUPDATE++;
 	}
 
 	long long int NEW_CURRENT_TIME = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-	if (MODELUPDATESPERFRAMEUPDATE > 0) MSPERMODELUPDATE = (NEW_CURRENT_TIME - CURRENT_TIME) / MODELUPDATESPERFRAMEUPDATE;
+	if (performancestats.MODELUPDATESPERFRAMEUPDATE > 0) performancestats.MSPERMODELUPDATE = (NEW_CURRENT_TIME - CURRENT_TIME) / performancestats.MODELUPDATESPERFRAMEUPDATE;
 	ComposeFrame();
-	MSTODRAW = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() - NEW_CURRENT_TIME;
+	performancestats.MSTODRAW = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() - NEW_CURRENT_TIME;
 	wnd.display();
 }
 
@@ -149,7 +109,7 @@ void Game::UpdateModel()
 	if (gamestatus == GameInProgress)
 	{
 		WatersAnimation::loop = (WatersAnimation::loop + 1) % (3 * 16);
-		if ((tanks.GetTeamTanksNumber(1) == 0) && (lifesleft > 0))
+		if ((tanks.GetTeamTanksNumber(1) == 0) && (variables.lifesleft > 0))
 		{
 			// player's tank dead, but there are more lives
 			const Vec2 possible_spawn_locations[2] = { Vec2(220.0f, 580.0f), Vec2(380.0f, 580.0f) };
@@ -160,7 +120,7 @@ void Game::UpdateModel()
 				// location to the left of eagle is available
 				tanks.CreateTank(try_location, 1, 2, 1);
 				tank1 = tanks.GetTankAtLocation(try_location);
-				lifesleft--;
+				variables.lifesleft--;
 				effects.AddVisualEffect(try_location, TANK_CREATION);
 			}
 			else
@@ -172,12 +132,12 @@ void Game::UpdateModel()
 				{
 					tanks.CreateTank(try_location, 1, 2, 1);
 					tank1 = tanks.GetTankAtLocation(try_location);
-					lifesleft--;
+					variables.lifesleft--;
 					effects.AddVisualEffect(try_location, TANK_CREATION);
 				}
 			}
 		}
-		if (tankgenerationcountdown == 0)
+		if (variables.tankgenerationcountdown == 0)
 		{
 			// create a new enemy tank
 			const Vec2 possible_spawn_locations[3] = { Vec2(20.0f, 20.0f), Vec2(300.0f, 20.0f), Vec2(580.0f, 20.0f) };
@@ -185,20 +145,20 @@ void Game::UpdateModel()
 			Vec2 try_location = possible_spawn_locations[z];
 			if (tanks.NoTankHere(try_location + Vec2(-15.0f, -15.0f)) && tanks.NoTankHere(try_location + Vec2(15.0f, -15.0f)) &&
 				tanks.NoTankHere(try_location + Vec2(-15.0f, 15.0f)) && tanks.NoTankHere(try_location + Vec2(15.0f, 15.0f)) &&
-				(tankgenerationnumber < MAX_ENEMY_TANKS_TOTAL))
+				(variables.tankgenerationnumber < parameters.MAX_ENEMY_TANKS_TOTAL))
 			{
-				tanks.CreateTank(try_location, generationsequence[tankgenerationnumber] % MAX_ENEMY_TANKS_TOTAL, 4, -1);
-				tankgenerationnumber++;
-				tankgenerationcountdown = TANKGENERATIONINTERVAL;
+				tanks.CreateTank(try_location, parameters.generationsequence[variables.tankgenerationnumber] % parameters.MAX_ENEMY_TANKS_TOTAL, 4, -1);
+				variables.tankgenerationnumber++;
+				variables.tankgenerationcountdown = parameters.TANKGENERATIONINTERVAL;
 				effects.AddVisualEffect(try_location, TANK_CREATION);
 			}
 		}
-		else if (((tanks.GetTeamTanksNumber(-1) < MAX_ENEMY_TANKS) || (tankgenerationcountdown > 200)) && (tankgenerationcountdown > 0))
+		else if (((tanks.GetTeamTanksNumber(-1) < parameters.MAX_ENEMY_TANKS) || (variables.tankgenerationcountdown > 200)) && (variables.tankgenerationcountdown > 0))
 		{
-			tankgenerationcountdown--;
+			variables.tankgenerationcountdown--;
 		}
 
-		if (bonusgenerationcountdown <= 0)
+		if (variables.bonusgenerationcountdown <= 0)
 		{
 			bool tryagain = true;
 			Vec2 newbonuspos;
@@ -207,22 +167,22 @@ void Game::UpdateModel()
 				newbonuspos = Vec2(Vei2((rand() % 14) * 40 + 40, (rand() % 14) * 40 + 40));
 				if (((tank1->GetPos() - newbonuspos).LInfNorm() > 60) && ((eagle->GetPos() - newbonuspos).LInfNorm() > 100)) { tryagain = false; }
 			}
-			bonuses.CreateBonus(new Bonus(newbonuspos, bonusgenerationsequence[bonusgenerationnumber % 5], BONUSLIFEDURATION));
-			bonusgenerationnumber++;
-			bonusgenerationcountdown = BONUSGENERATIONINTERVAL;
+			bonuses.CreateBonus(new Bonus(newbonuspos, parameters.bonusgenerationsequence[variables.bonusgenerationnumber % 5], parameters.BONUSLIFEDURATION));
+			variables.bonusgenerationnumber++;
+			variables.bonusgenerationcountdown = parameters.BONUSGENERATIONINTERVAL;
 		}
 		else
 		{
-			bonusgenerationcountdown--;
+			variables.bonusgenerationcountdown--;
 		}
 
 
-		if (fortress)
+		if (variables.fortress)
 		{
-			fortresstimer--;
-			if (fortresstimer <= 0)
+			variables.fortresstimer--;
+			if (variables.fortresstimer <= 0)
 			{
-				fortress = false;
+				variables.fortress = false;
 				// Remove fortress
 				mapobjects.DestroyObjectsInArea(RectF(eagle->GetPos() + Vec2(-40.1f, -40.1f), eagle->GetPos() + Vec2(40.1f, 40.1f)));
 
@@ -254,14 +214,14 @@ void Game::UpdateModel()
 		{
 			int bonuskind = consumedbonus->GetKind();
 			consumedbonus->Eliminate();
-			if (bonuskind == 1) { lifesleft++; }
+			if (bonuskind == 1) { variables.lifesleft++; }
 			if (bonuskind == 2) { tank1->ConsumeRevolver(); };
 			if (bonuskind == 3) { tank1->ConsumeShield(); };
 			if (bonuskind == 4) { tanks.BlowUpTeam(-1, effects); }
 			if (bonuskind == 5)
 			{
 				// Process Fortress consumption
-				if (fortress) { fortresstimer += FORTDURATION; }
+				if (variables.fortress) { variables.fortresstimer += parameters.FORTDURATION; }
 				else
 				{
 					// First, kill all tanks near eagle
@@ -277,8 +237,8 @@ void Game::UpdateModel()
 					mapobjects.AddMapObject(new Fortress(eagle->GetPos() + Vec2(40.f, -40.f)));
 					mapobjects.AddMapObject(new Fortress(eagle->GetPos() + Vec2(40.f, 0.f)));
 
-					fortress = true;
-					fortresstimer = FORTDURATION;
+					variables.fortress = true;
+					variables.fortresstimer = parameters.FORTDURATION;
 
 					// Also, fortress will need to expire and return to old status
 				}
@@ -287,20 +247,20 @@ void Game::UpdateModel()
 
 		bonuses.Process();
 
-		if (checkmaploop == 0)
+		if (variables.checkmaploop == 0)
 		{
 			mapobjects.InterpretMap(mapinterpretation);
-			checkmaploop = 100;
+			variables.checkmaploop = 100;
 		}
-		else { checkmaploop--; }
-		if (rerouteloop == 0)
+		else { variables.checkmaploop--; }
+		if (variables.rerouteloop == 0)
 		{
 			mapinterpretation.SeekRoutesWithQueue();
-			rerouteloop = 2;
+			variables.rerouteloop = 2;
 		}
 		else
 		{
-			rerouteloop--;
+			variables.rerouteloop--;
 		}
 
 		tanks.Move(mapobjects);
@@ -309,19 +269,29 @@ void Game::UpdateModel()
 
 		if (sf::Keyboard::isKeyPressed(sf::Keyboard::B))  // B key
 		{
-			_soilon = !_soilon;
+			variables._soilon = !variables._soilon;
 		}
 
-		if (((tanks.GetTeamTanksNumber(1) == 0) && (lifesleft == 0)) || (eagle->exists == false))
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::P))  // Pause
 		{
-			endgametimer--;
-			if (endgametimer <= 0) gamestatus = GameOver;
+			gamestatus = Pause;
 		}
-		else if ((tanks.GetTeamTanksNumber(-1) == 0) && (tankgenerationnumber == MAX_ENEMY_TANKS_TOTAL))
+
+		if (((tanks.GetTeamTanksNumber(1) == 0) && (variables.lifesleft == 0)) || (eagle->exists == false))
 		{
-			endgametimer--;
-			if (endgametimer <= 0)	gamestatus = GameWon;
+			variables.endgametimer--;
+			if (variables.endgametimer <= 0) gamestatus = GameOver;
 		}
+		else if ((tanks.GetTeamTanksNumber(-1) == 0) && (variables.tankgenerationnumber == parameters.MAX_ENEMY_TANKS_TOTAL))
+		{
+			variables.endgametimer--;
+			if (variables.endgametimer <= 0)	gamestatus = GameWon;
+		}
+	}
+	else if (gamestatus == Pause)
+	{
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
+		gamestatus = GameInProgress;
 	}
 	else if (gamestatus == MainMenu)
 	{
@@ -353,7 +323,7 @@ void Game::UpdateModel()
 		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
 		{
 			gamestatus = MainMenu;
-			lifesleft = 2;
+			variables.lifesleft = 2;
 		}
 	}
 	else if (gamestatus == GameWon)
@@ -367,7 +337,7 @@ void Game::UpdateModel()
 
 void Game::ComposeFrame()
 {
-	if (gamestatus == GameInProgress)
+	if ((gamestatus == GameInProgress) || (gamestatus == Pause))
 	{
 		for (int i = 0; i <= 15; i++)
 		{
@@ -377,7 +347,7 @@ void Game::ComposeFrame()
 				//gfx.PutPixel(gfx.leftindent + i * 40, gfx.topindent + j * 40, 255, 255, 255);
 			}
 		}
-		if (_soilon)
+		if (variables._soilon)
 		{
 			for (int i = 0; i < 15; i++)
 			{
@@ -410,10 +380,10 @@ void Game::ComposeFrame()
 		kprint("TANK Game", Vei2(650, 10), consolasfont, sf::Color::Green, wnd);
 
 		DrawSpriteChromaCenteredRotated(wnd, Vei2(685, 65), TanksContainer::redtankbitmap, RectI(Vei2(0, 0), Vei2(38, 38)), 4);
-		kprint(": " + std::to_string(MAX_ENEMY_TANKS_TOTAL - tankgenerationnumber), Vei2(710, 53), consolasfont, sf::Color::Green, wnd);
+		kprint(": " + std::to_string(parameters.MAX_ENEMY_TANKS_TOTAL - variables.tankgenerationnumber), Vei2(710, 53), consolasfont, sf::Color::Green, wnd);
 
 		DrawSpriteChromaCenteredRotated(wnd, Vei2(685, 140), TanksContainer::bluetankbitmap, RectI(Vei2(0, 0), Vei2(39, 39)), 2);
-		kprint(": " + std::to_string(lifesleft), Vei2(710, 128), consolasfont, sf::Color::Green, wnd);
+		kprint(": " + std::to_string(variables.lifesleft), Vei2(710, 128), consolasfont, sf::Color::Green, wnd);
 
 		if (tank1->RevolverTimer() > 0)
 		{
@@ -427,19 +397,26 @@ void Game::ComposeFrame()
 			kprint(std::to_string(tank1->ShieldTimer() / 50), Vei2(700, 225), consolasfont, (tank1->ShieldTimer() < 150) ? sf::Color::Red : sf::Color::Green, wnd);
 		}
 
-		if (fortresstimer > 0)
+		if (variables.fortresstimer > 0)
 		{
 			DrawSpriteChromaCentered(wnd, Vei2(770, 200), BonusesContainer::bonusesbitmap, RectI(Vei2(0, 80), Vei2(39, 119)));
-			kprint(std::to_string(fortresstimer / 50), Vei2(760, 225), consolasfont, (fortresstimer < 150) ? sf::Color::Red : sf::Color::Green, wnd);
+			kprint(std::to_string(variables.fortresstimer / 50), Vei2(760, 225), consolasfont, (variables.fortresstimer < 150) ? sf::Color::Red : sf::Color::Green, wnd);
 		}
 
-		kprint("UPF: " + std::to_string(MODELUPDATESPERFRAMEUPDATE), Vei2(640, 420), consolasfont, sf::Color::Blue, wnd);
-		kprint("ModUpdMS: " + std::to_string(MSPERMODELUPDATE), Vei2(640, 445), consolasfont, sf::Color::Blue, wnd);
-		kprint("DrawMS: " + std::to_string(MSTODRAW), Vei2(640, 470), consolasfont, sf::Color::Blue, wnd);
+		kprint("UPF: " + std::to_string(performancestats.MODELUPDATESPERFRAMEUPDATE), Vei2(640, 420), consolasfont, sf::Color::Blue, wnd);
+		kprint("ModUpdMS: " + std::to_string(performancestats.MSPERMODELUPDATE), Vei2(640, 445), consolasfont, sf::Color::Blue, wnd);
+		kprint("DrawMS: " + std::to_string(performancestats.MSTODRAW), Vei2(640, 470), consolasfont, sf::Color::Blue, wnd);
 		kprint("TanksMS: " + std::to_string(TANKS_DRAWN_TIME - MAP_DRAWN_TIME), Vei2(640, 495), consolasfont, sf::Color::Blue, wnd);
 		kprint("MapMS: " + std::to_string(MAP_DRAWN_TIME - FRAME_START_TIME), Vei2(640, 520), consolasfont, sf::Color::Blue, wnd);
 		kprint("OtherMS: " + std::to_string(REMAINDER_DRAWN_TIME - MAP_DRAWN_TIME), Vei2(640, 545), consolasfont, sf::Color::Blue, wnd);
 		kprint("(" + std::to_string(int(tank1->GetPos().x)) + "; " + std::to_string(int(tank1->GetPos().y)) + ")", Vei2(630, 570), consolasfont, sf::Color::Blue, wnd);
+
+
+		if (gamestatus == Pause)
+		{
+			kprint("PAUSE", Vei2(340, 200), consolasfont, sf::Color::Green, wnd);
+			kprint("Press SPACE to resume", Vei2(200, 300), consolasfont, sf::Color::Green, wnd);
+		}
 	}
 	else if (gamestatus == MainMenu)
 	{

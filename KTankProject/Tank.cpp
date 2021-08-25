@@ -178,11 +178,30 @@ const Vec2 Tank::dir2vec(int d)
 void Tank::Draw(sf::RenderWindow& wnd) const
 {
 	RectI frame(Vei2(0,0), Vei2(38, 38));
-	//tankbitmap.DrawSpriteCenteredDir(gfx, Vei2(pos) + Vei2(20, 20), frame, RectI(Vei2(20, 20), Vei2(620, 620)), GetOrientation());
 	if (kind == 0) DrawSpriteChromaCenteredRotated(wnd, Vei2(pos), TanksContainer::basictankbitmap, RectI(Vei2(0, 0), Vei2(39, 39)), GetOrientation());
 	if (kind == 1) DrawSpriteChromaCenteredRotated(wnd, Vei2(pos), TanksContainer::bluetankbitmap, RectI(Vei2(0, 0), Vei2(39, 39)), GetOrientation());
 	if (kind == 2) DrawSpriteChromaCenteredRotated(wnd, Vei2(pos), TanksContainer::redtankbitmap, RectI(Vei2(0, 0), Vei2(38, 38)), GetOrientation());
 	if (kind == 3) DrawSpriteChromaCenteredRotated(wnd, Vei2(pos), TanksContainer::greentankbitmap, RectI(Vei2(0, 0), Vei2(49, 39)), GetOrientation());
+	/*
+	if (kind == 1) 
+	{
+		sf::Sprite sprite;
+		sprite.setTexture(TanksContainer::bluetankbitmap);
+		sprite.setOrigin(sprite.getLocalBounds().width / 2, sprite.getLocalBounds().height / 2);
+		if (GetOrientation() == 2) {
+			sprite.setRotation(270);
+		}
+		else if (GetOrientation() == 3) {
+			sprite.setRotation(180);
+		}
+		else if (GetOrientation() == 4) {
+			sprite.setRotation(90);
+		}
+		sprite.setPosition((float)pos.x, (float)pos.y);
+		sprite.setScale(sf::Vector2f(0.25, 0.25));
+		wnd.draw(sprite);
+	}
+	*/
 }
 
 TanksContainer::~TanksContainer()
