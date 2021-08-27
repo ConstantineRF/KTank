@@ -1,9 +1,12 @@
 #include <SFML\Graphics.hpp>
+
 #include "Game.h"
+#include "Sounds.h"
+#include <iostream>
 
 int main()
 {
-	sf::RenderWindow window(sf::VideoMode(800, 600), "SFML works!", sf::Style::Fullscreen);
+	sf::RenderWindow window(sf::VideoMode(800, 600), "K-Tank!"); // , sf::Style::Fullscreen);
 	Game game(window);
 	TanksContainer::basictankbitmap.loadFromFile("graphics\\BasicTank.png");
 	TanksContainer::bluetankbitmap.loadFromFile("graphics\\BlueTank.png");
@@ -16,6 +19,12 @@ int main()
 	VisualEffect::bigexplosionbitmap.loadFromFile("graphics\\BigExplosion.png");
 	VisualEffect::smallexplosionbitmap.loadFromFile("graphics\\SmallExplosion.png");
 
+	if (!Sounds::bigexplosionbuffer.loadFromFile("sounds\\BigExplosion.wav")) { std::cout << "Cannot load BigExplosion.wav" << std::endl; };
+	Sounds::bigexplosion.setBuffer(Sounds::bigexplosionbuffer);
+	if (!Sounds::shotbuffer.loadFromFile("sounds\\SHOT.wav")) { std::cout << "Cannot load Shot.wav" << std::endl; };
+	Sounds::shot.setBuffer(Sounds::shotbuffer);
+	if (!Sounds::boombuffer.loadFromFile("sounds\\boom2.wav")) { std::cout << "Cannot load boom2.wav" << std::endl; };
+	Sounds::boom.setBuffer(Sounds::boombuffer);
 
 	while (window.isOpen())
 	{

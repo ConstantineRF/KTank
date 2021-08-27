@@ -1,49 +1,16 @@
 #include "MapInterpretation.h"
-void MapInterpretation::SeekRoutes()
-{
-	int rightcost, leftcost, upcost, downcost, leftrightcost, updowncost, movecost;
-			for (int i = 0; i < c-3; i++)
-		{
-			route[i].resize(r-3);
-			for (int j = 0; j < r-3; j++)
-				route[i][j] = 1000000;
-		}
-
-	route[goal.x][goal.y] = 0;
-	for (int counter = 0; counter < 10; counter++)
-	{
-		for (int i = 0; i < c - 3; i++)
-			for (int j = 0; j < r - 3; j++)
-			{
-				rightcost = (i<c-4) ? (route[i+1][j] + map[i + 4][j] + map[i + 4][j + 1] + map[i + 4][j + 2] + map[i + 4][j + 3]) : 1000000;
-				leftcost = (i>0) ? (route[i-1][j] + map[i - 1][j] + map[i - 1][j + 1] + map[i - 1][j + 2] + map[i - 1][j + 3]) : 1000000;
-				upcost = (j>0) ? (route[i][j-1] + map[i][j - 1] + map[i + 1][j - 1] + map[i + 2][j - 1] + map[i + 3][j - 1]) : 1000000;
-				downcost = (j<r-4) ? (route[i][j+1] + map[i][j + 4] + map[i + 1][j + 4] + map[i + 2][j + 4] + map[i + 3][j + 4]) : 1000000;
-				leftrightcost = rightcost < leftcost ? rightcost : leftcost;
-				updowncost = upcost < downcost ? upcost : leftcost;
-				movecost = leftrightcost < updowncost ? leftrightcost : updowncost;
-				route[i][j] = route[i][j] < movecost ? route[i][j] : movecost;
-			}
-	}
-}
 
 void MapInterpretation::SeekRoutesWithQueue()
 {
-	std::queue<Vei2> q;
-	std::vector<std::vector<bool>> tocheck(c-3, std::vector<bool>(r-3, false));
 	Vei2 f;
 	int i, j, rightcost, leftcost, upcost, downcost, leftrightcost, updowncost, movecost;
 	bool improved, degraded;
-	route[goal.x][goal.y] = 0;
-	q.push(goal + Vei2(-1, 0)); tocheck[goal.x - 1][goal.y] = true;
-	q.push(goal + Vei2(0, -1)); tocheck[goal.x][goal.y - 1] = true;
-	q.push(goal + Vei2(1, 0)); tocheck[goal.x + 1][goal.y] = true;
 	// and one more random point
 	int zi = rand() % 57;
 	int zj = rand() % 57;
 	q.push(Vei2(zi, zj)); tocheck[zi][zj] = true;
 	int counter = 0;
-	while ((counter < 30000) && (!q.empty()))
+	while ((counter < 500) && (!q.empty()))
 	{
 		i = q.front().x;
 		j = q.front().y;

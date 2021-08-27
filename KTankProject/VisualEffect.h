@@ -5,6 +5,7 @@
 #include "Vec2.h"
 #include "Rect.h"
 #include "Drawing.h"
+#include "Sounds.h"
 
 enum VisualEffectType {ROCKET_EXPLOSION, TANK_EXPLOSION, BRICKS_BREAKING, TANK_CREATION};
 
@@ -39,6 +40,7 @@ public:
 			if (n < 0) { n = 0; }
 			int i = n % 5; int j = (n - i) / 5;
 			DrawSpriteChromaCentered(wnd, Vei2(pos), smallexplosionbitmap, RectI(Vei2(15 * i, 15 * j), Vei2(14 + 15 * i, 14 + 15 * j)));
+			if (countdown==24)	Sounds::boom.play();
 		} break;
 		case TANK_EXPLOSION: {
 			int n = (50 - countdown) / 2;
@@ -46,6 +48,7 @@ public:
 			if (n < 0) { n = 0; }
 			int i = n % 5; int j = (n - i) / 5;
 			DrawSpriteChromaCentered(wnd, Vei2(pos), bigexplosionbitmap, RectI(Vei2(40*i, 40*j), Vei2(39+40*i, 39+40*j)));
+			if (countdown==49) Sounds::bigexplosion.play();
 		} break;
 		case BRICKS_BREAKING: {
 			sf::VertexArray va(sf::Points, 5 + countdown);

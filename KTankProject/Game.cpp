@@ -403,6 +403,7 @@ void Game::ComposeFrame()
 			kprint(std::to_string(variables.fortresstimer / 50), Vei2(760, 225), consolasfont, (variables.fortresstimer < 150) ? sf::Color::Red : sf::Color::Green, wnd);
 		}
 
+		kprint("Tanks ttl " + std::to_string(tanks.tanks.size()), Vei2(640, 395), consolasfont, sf::Color::Blue, wnd);
 		kprint("UPF: " + std::to_string(performancestats.MODELUPDATESPERFRAMEUPDATE), Vei2(640, 420), consolasfont, sf::Color::Blue, wnd);
 		kprint("ModUpdMS: " + std::to_string(performancestats.MSPERMODELUPDATE), Vei2(640, 445), consolasfont, sf::Color::Blue, wnd);
 		kprint("DrawMS: " + std::to_string(performancestats.MSTODRAW), Vei2(640, 470), consolasfont, sf::Color::Blue, wnd);

@@ -1,4 +1,5 @@
 #include "Tank.h"
+//#include "Sounds.h"
 //#include <cassert>
 
 sf::Texture TanksContainer::basictankbitmap;
@@ -148,6 +149,7 @@ void Tank::TryShooting(RocketsContainer & rockets)
 		int kind = 1;
 		if ((team > 0) & (RevolverTimer() > 0)) { kind = 2; }
 		rockets.AddRocket(new Rocket(GetPos() + Tank::dir2vec(GetOrientation())*(21.f), Tank::dir2vec(GetOrientation())*(5.f), team, kind));
+		Sounds::shot.play();
 	}
 }
 

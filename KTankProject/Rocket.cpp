@@ -1,4 +1,5 @@
 #include "Rocket.h"
+
 sf::Texture Rocket::rocketsbitmap;
 
 void Rocket::Fly()
@@ -95,7 +96,7 @@ void RocketsContainer::ProcessRockets(MapObjectsContainer & mapobjects, TanksCon
 				if ((!(hittank->IsShieldOn())) & (hittank->GetTeam()!=(*it)->GetOriginTeam()))
 				{
 					hittank->AbsorbHit((*it)->GetKind());
-					if (!hittank->IsLive()) { effects.AddVisualEffect(hittank->GetPos(), TANK_EXPLOSION); }					
+					if (!hittank->IsLive()) { effects.AddVisualEffect(hittank->GetPos(), TANK_EXPLOSION); }
 				}
 				effects.AddVisualEffect((*it)->GetPos(), ROCKET_EXPLOSION);
 				(*it)->Liquidate();
