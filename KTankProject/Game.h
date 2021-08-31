@@ -13,6 +13,18 @@ public:
 	static constexpr long long int MS_PER_UPDATE = 20;
 };
 
+namespace options
+{
+	static std::vector<std::vector<int>> diffseqs = {
+		{ 0,0,1,0,0, 1,0,0,2,0, 1,0,2,0,1, 3,0,1,2,3},
+		{ 0,0,0,1,0, 0,1,0,0,2, 1,0,1,2,0, 0,1,2,1,2, 0,1,3,0,2, 3,0,1,3,3 }, 
+		{ 0,0,0,1,0, 0,1,0,0,2, 1,0,1,2,0, 0,1,2,1,2, 0,1,3,0,2, 3,0,1,3,3, 1,2,3,2,3, 1,2,3,3,3 }
+	};
+	static std::vector<std::string> diffnames = { "TOUCH ME GENTLY", "DEAD MEAT", "HURT ME PLENTY" };
+	static int currentdiff = 1;
+	//static constexpr int numdiffs = 3;
+}
+
 class GameParameters
 {
 	// These reflect difficulty calibration and expected to be stable during a single game level
@@ -20,17 +32,16 @@ public:
 	GameParameters()
 	{
 		MAX_ENEMY_TANKS = 5;
-		MAX_ENEMY_TANKS_TOTAL = 30;
 		TANKGENERATIONINTERVAL = 300;
 		BONUSGENERATIONINTERVAL = 600;
 		BONUSLIFEDURATION = 800;
 		FORTDURATION = 500;
 		generationsequence = { 0,0,0,1,0, 0,1,0,0,2, 1,0,1,2,0, 0,1,2,1,2, 0,1,3,0,2, 3,0,1,3,3 };
-		assert(MAX_ENEMY_TANKS_TOTAL == generationsequence.size());
+		TOTAL_ENEMY_TANKS = generationsequence.size();
 		bonusgenerationsequence = { 1,2,3,4,5 };
 	}
 	int MAX_ENEMY_TANKS;
-	int MAX_ENEMY_TANKS_TOTAL;
+	int TOTAL_ENEMY_TANKS;
 	int TANKGENERATIONINTERVAL;
 	int BONUSGENERATIONINTERVAL;
 	int BONUSLIFEDURATION;
@@ -41,7 +52,7 @@ public:
 
 class GameVariables
 {
-	// These navigate game dynamics
+	// These reflect and navigate game dynamics
 public:
 	GameVariables(const GameParameters & parameters) 
 	{
@@ -115,7 +126,7 @@ private:
 	GameParameters parameters;
 	GameVariables variables;
 
-	enum GameStatus { MainMenu, GameInProgress, Pause, GameOver, GameWon } gamestatus;
+	enum GameStatus { MainMenu, MapSelection, OptionsConfig, GameInProgress, Pause, GameOver, GameWon } gamestatus;
 
 	long long int PREVIOUS_TIME, LAG;  // Manage consistent game speed for all platforms and during all times
 

@@ -145,9 +145,9 @@ void Game::UpdateModel()
 			Vec2 try_location = possible_spawn_locations[z];
 			if (tanks.NoTankHere(try_location + Vec2(-15.0f, -15.0f)) && tanks.NoTankHere(try_location + Vec2(15.0f, -15.0f)) &&
 				tanks.NoTankHere(try_location + Vec2(-15.0f, 15.0f)) && tanks.NoTankHere(try_location + Vec2(15.0f, 15.0f)) &&
-				(variables.tankgenerationnumber < parameters.MAX_ENEMY_TANKS_TOTAL))
+				(variables.tankgenerationnumber < parameters.TOTAL_ENEMY_TANKS))
 			{
-				tanks.CreateTank(try_location, parameters.generationsequence[variables.tankgenerationnumber] % parameters.MAX_ENEMY_TANKS_TOTAL, 4, -1);
+				tanks.CreateTank(try_location, parameters.generationsequence[variables.tankgenerationnumber] % parameters.TOTAL_ENEMY_TANKS, 4, -1);
 				variables.tankgenerationnumber++;
 				variables.tankgenerationcountdown = parameters.TANKGENERATIONINTERVAL;
 				effects.AddVisualEffect(try_location, TANK_CREATION);
@@ -167,7 +167,7 @@ void Game::UpdateModel()
 				newbonuspos = Vec2(Vei2((rand() % 14) * 40 + 40, (rand() % 14) * 40 + 40));
 				if (((tank1->GetPos() - newbonuspos).LInfNorm() > 60) && ((eagle->GetPos() - newbonuspos).LInfNorm() > 100)) { tryagain = false; }
 			}
-			bonuses.CreateBonus(new Bonus(newbonuspos, parameters.bonusgenerationsequence[variables.bonusgenerationnumber % 5], parameters.BONUSLIFEDURATION));
+			bonuses.CreateBonus(new Bonus(newbonuspos, parameters.bonusgenerationsequence[variables.bonusgenerationnumber % parameters.bonusgenerationsequence.size()], parameters.BONUSLIFEDURATION));
 			variables.bonusgenerationnumber++;
 			variables.bonusgenerationcountdown = parameters.BONUSGENERATIONINTERVAL;
 		}
@@ -282,7 +282,7 @@ void Game::UpdateModel()
 			variables.endgametimer--;
 			if (variables.endgametimer <= 0) gamestatus = GameOver;
 		}
-		else if ((tanks.GetTeamTanksNumber(-1) == 0) && (variables.tankgenerationnumber == parameters.MAX_ENEMY_TANKS_TOTAL))
+		else if ((tanks.GetTeamTanksNumber(-1) == 0) && (variables.tankgenerationnumber == parameters.TOTAL_ENEMY_TANKS))
 		{
 			variables.endgametimer--;
 			if (variables.endgametimer <= 0)	gamestatus = GameWon;
@@ -294,6 +294,126 @@ void Game::UpdateModel()
 		gamestatus = GameInProgress;
 	}
 	else if (gamestatus == MainMenu)
+	{
+		if (timertocursormove > 0) { timertocursormove--; }
+		if (cursor > 1) { cursor = 1; }
+		if (cursor < 0) { cursor = 0; }
+		if (timertocursormove <= 0)
+		{
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
+			{
+				if (cursor > 0) { cursor--; }
+				timertocursormove = 5;
+			}
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
+			{
+				if (cursor < 1) { cursor++; }
+				timertocursormove = 5;
+			}
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Return))
+			{
+				if (cursor == 0)
+				{
+					gamestatus = MapSelection;
+					timertocursormove = 5;
+					cursor = 0;
+				}
+				if (cursor == 1)
+				{
+					gamestatus = OptionsConfig;
+					timertocursormove = 5;
+					cursor = 0;
+				}
+			}
+		}
+	}
+	else if (gamestatus == OptionsConfig)
+	{
+		if (timertocursormove > 0) { timertocursormove--; }
+		if (cursor > 2) { cursor = 2; }
+		if (cursor < 0) { cursor = 0; }
+		if (timertocursormove <= 0)
+		{
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
+			{
+				if (cursor > 0) { cursor--; }
+				timertocursormove = 5;
+			}
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
+			{
+				if (cursor < 2) { cursor++; }
+				timertocursormove = 5;
+			}
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
+			{
+				if (cursor == 0)
+				{
+					options::currentdiff++;
+					if (options::currentdiff == options::diffseqs.size()) { options::currentdiff = 0; }
+					parameters.generationsequence = options::diffseqs[options::currentdiff];
+					parameters.TOTAL_ENEMY_TANKS = parameters.generationsequence.size();
+					timertocursormove = 5;
+				}
+				if (cursor == 1)
+				{
+					if (parameters.MAX_ENEMY_TANKS < 20) { parameters.MAX_ENEMY_TANKS++; }
+					timertocursormove = 5;
+				}
+				if (cursor == 2)
+				{
+					if (parameters.TANKGENERATIONINTERVAL < 20 * (1000 / MainConstants::MS_PER_UPDATE)) { parameters.TANKGENERATIONINTERVAL+=(1000 / MainConstants::MS_PER_UPDATE); }
+					timertocursormove = 5;
+				}
+			}
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
+			{
+				if (cursor == 0)
+				{
+					options::currentdiff--;
+					if (options::currentdiff < 0) { options::currentdiff = options::diffseqs.size() - 1; }
+					parameters.generationsequence = options::diffseqs[options::currentdiff];
+					parameters.TOTAL_ENEMY_TANKS = parameters.generationsequence.size();
+					timertocursormove = 5;
+				}
+				if (cursor == 1)
+				{
+					if (parameters.MAX_ENEMY_TANKS > 1) { parameters.MAX_ENEMY_TANKS--; }
+					timertocursormove = 5;
+				}
+				if (cursor == 2)
+				{
+					if (parameters.TANKGENERATIONINTERVAL > 3 * (1000 / MainConstants::MS_PER_UPDATE)) { parameters.TANKGENERATIONINTERVAL -= (1000 / MainConstants::MS_PER_UPDATE); }
+					timertocursormove = 5;
+				}
+			}
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Return))
+			{
+				if (cursor == 0)
+				{
+					options::currentdiff++;
+					if (options::currentdiff == options::diffseqs.size()) { options::currentdiff = 0; }
+					parameters.generationsequence = options::diffseqs[options::currentdiff];
+					parameters.TOTAL_ENEMY_TANKS = parameters.generationsequence.size();
+					timertocursormove = 5;
+				}
+				if (cursor == 1)
+				{
+					timertocursormove = 5;
+				}
+				if (cursor == 2)
+				{
+					timertocursormove = 5;
+				}
+			}
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::BackSpace))
+			{
+				gamestatus = MainMenu;
+				timertocursormove = 5;
+				cursor = 1;
+			}
+		}
+	}
+	else if (gamestatus == MapSelection)
 	{
 		if (timertocursormove > 0) { timertocursormove--; }
 		if (timertocursormove <= 0)
@@ -315,6 +435,12 @@ void Game::UpdateModel()
 				InitializeNewGame(mapfilenames[cursor]);
 				gamestatus = GameInProgress;
 				timertocursormove = 5;
+			}
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::BackSpace))
+			{
+				gamestatus = MainMenu;
+				timertocursormove = 5;
+				cursor = 0;
 			}
 		}
 	}
@@ -355,6 +481,7 @@ void Game::ComposeFrame()
 				{
 					// UPDATE HERE AFTER GRAPHICS FIGURED
 					//gfx.DrawSpriteCentered(Vei2(i * 40 + 40, j * 40 + 40), MapObjectsContainer::mapobjectsbitmap, RectI(Vei2(40, 40), Vei2(79, 79)));
+					DrawSpriteChromaCenteredRotated(wnd, Vei2(i * 40 + 20, j * 40 + 20), MapObjectsContainer::mapobjectsbitmap, RectI(Vei2(40, 40), Vei2(79, 79)));
 				}
 			}
 		}
@@ -380,7 +507,7 @@ void Game::ComposeFrame()
 		kprint("TANK Game", Vei2(650, 10), consolasfont, sf::Color::Green, wnd);
 
 		DrawSpriteChromaCenteredRotated(wnd, Vei2(685, 65), TanksContainer::redtankbitmap, RectI(Vei2(0, 0), Vei2(38, 38)), 4);
-		kprint(": " + std::to_string(parameters.MAX_ENEMY_TANKS_TOTAL - variables.tankgenerationnumber), Vei2(710, 53), consolasfont, sf::Color::Green, wnd);
+		kprint(": " + std::to_string(parameters.TOTAL_ENEMY_TANKS - variables.tankgenerationnumber), Vei2(710, 53), consolasfont, sf::Color::Green, wnd);
 
 		DrawSpriteChromaCenteredRotated(wnd, Vei2(685, 140), TanksContainer::bluetankbitmap, RectI(Vei2(0, 0), Vei2(39, 39)), 2);
 		kprint(": " + std::to_string(variables.lifesleft), Vei2(710, 128), consolasfont, sf::Color::Green, wnd);
@@ -421,6 +548,44 @@ void Game::ComposeFrame()
 	}
 	else if (gamestatus == MainMenu)
 	{
+		kprint("TANK GAME", Vei2(340, 50), consolasfont, sf::Color::Green, wnd);
+		kprint("Version 0", Vei2(340, 75), consolasfont, sf::Color::Green, wnd);
+		kprint("Play", Vei2(275, 150), consolasfont, sf::Color::Green, wnd);
+		kprint("Options", Vei2(275, 175), consolasfont, sf::Color::Green, wnd);
+
+		DrawSpriteChromaCentered(wnd, Vei2(265, 150 + 20 + cursor * 25), Rocket::rocketsbitmap, RectI(Vei2(0, 0), Vei2(19, 19)));
+		kprint("Navigate menu by arrow buttons and ENTER", Vei2(130, 500), consolasfont, sf::Color::Green, wnd);
+		kprint("Created by Konstantin Kalinchenko", Vei2(190, 550), consolasfont, sf::Color::Green, wnd);
+
+	}
+	else if (gamestatus == OptionsConfig)
+	{
+		kprint("TANK GAME", Vei2(340, 50), consolasfont, sf::Color::Green, wnd);
+		kprint("Options", Vei2(350, 75), consolasfont, sf::Color::Green, wnd);
+		kprint("Enemy Army:", Vei2(150, 150), consolasfont, sf::Color::Green, wnd);
+		kprint(options::diffnames[options::currentdiff], Vei2(400, 150), consolasfont, sf::Color::Green, wnd);
+		kprint("Enemy Capacity:", Vei2(150, 175), consolasfont, sf::Color::Green, wnd);
+		kprint(std::to_string(parameters.MAX_ENEMY_TANKS), Vei2(400, 175), consolasfont, sf::Color::Green, wnd);
+		kprint("Enemy Spawn time:", Vei2(150, 200), consolasfont, sf::Color::Green, wnd);
+		kprint(std::to_string(parameters.TANKGENERATIONINTERVAL / (1000 / MainConstants::MS_PER_UPDATE)) + " seconds", Vei2(400, 200), consolasfont, sf::Color::Green, wnd);
+		DrawSpriteChromaCentered(wnd, Vei2(140, 150 + 20 + cursor * 25), Rocket::rocketsbitmap, RectI(Vei2(0, 0), Vei2(19, 19)));
+
+		// Draw enemy army
+		for (int i = 0; i < parameters.TOTAL_ENEMY_TANKS; i++)
+		{
+			if (parameters.generationsequence[i] == 0) DrawSpriteChromaCenteredRotated(wnd, Vei2(50 + 700 * i / parameters.TOTAL_ENEMY_TANKS, 400), TanksContainer::basictankbitmap, RectI(Vei2(0, 0), Vei2(39, 39)), 2);
+			if (parameters.generationsequence[i] == 1) DrawSpriteChromaCenteredRotated(wnd, Vei2(50 + 700 * i / parameters.TOTAL_ENEMY_TANKS, 400), TanksContainer::bluetankbitmap, RectI(Vei2(0, 0), Vei2(39, 39)), 2);
+			if (parameters.generationsequence[i] == 2) DrawSpriteChromaCenteredRotated(wnd, Vei2(50 + 700 * i / parameters.TOTAL_ENEMY_TANKS, 400), TanksContainer::redtankbitmap, RectI(Vei2(0, 0), Vei2(38, 38)), 2);
+			if (parameters.generationsequence[i] == 3) DrawSpriteChromaCenteredRotated(wnd, Vei2(50 + 700 * i / parameters.TOTAL_ENEMY_TANKS, 400), TanksContainer::greentankbitmap, RectI(Vei2(0, 0), Vei2(49, 39)), 2);
+		}
+
+		kprint("Navigate menu by arrow buttons and ENTER", Vei2(130, 500), consolasfont, sf::Color::Green, wnd);
+		kprint("Press BACKSPACE to return to main menu", Vei2(130, 525), consolasfont, sf::Color::Green, wnd);
+		kprint("Created by Konstantin Kalinchenko", Vei2(190, 550), consolasfont, sf::Color::Green, wnd);
+
+	}
+	else if (gamestatus == MapSelection)
+	{
 		//gfx.DrawSpriteChromaCenteredRotated(Vei2(400, 50), TanksContainer::redtankbitmap, RectI(Vei2(0, 0), Vei2(38, 38)), 1, Colors::White, RectI(Vei2(0, 0), Vei2(gfx.ScreenWidth - 1, gfx.ScreenHeight - 1)));
 		
 		kprint("TANK GAME", Vei2(340, 50), consolasfont, sf::Color::Green, wnd);
@@ -435,7 +600,8 @@ void Game::ComposeFrame()
 			}
 		}
 		DrawSpriteChromaCentered(wnd, Vei2(265, 125 + 20 + (cursor - listcursor) * 25), Rocket::rocketsbitmap, RectI(Vei2(0, 0), Vei2(19, 19)));
-
+		kprint("Navigate menu by arrow buttons and ENTER", Vei2(130, 500), consolasfont, sf::Color::Green, wnd);
+		kprint("Press BACKSPACE to return to main menu", Vei2(130, 525), consolasfont, sf::Color::Green, wnd);
 		kprint("Created by Konstantin Kalinchenko", Vei2(190, 550), consolasfont, sf::Color::Green, wnd);
 		//printer.PrintColor("Created by Konstantin Kalinchenko", Vei2(190, 600), Colors::Green, gfx);
 	}
@@ -457,7 +623,6 @@ void Game::ComposeFrame()
 		DrawSpriteChromaCenteredRotated(wnd, Vei2(360, 300), TanksContainer::basictankbitmap, RectI(Vei2(0, 0), Vei2(39, 39)), 4);
 		DrawSpriteChromaCenteredRotated(wnd, Vei2(440, 300), TanksContainer::basictankbitmap, RectI(Vei2(0, 0), Vei2(39, 39)), 4);
 		DrawSpriteChromaCenteredRotated(wnd, Vei2(520, 300), TanksContainer::basictankbitmap, RectI(Vei2(0, 0), Vei2(39, 39)), 4);
-
 
 		kprint("Press SPACE for main menu", Vei2(240, 500), consolasfont, sf::Color::Red, wnd);
 		//printer.PrintColor("Press SPACE for main menu", Vei2(250, 550), Colors::Red, gfx);
