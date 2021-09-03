@@ -297,43 +297,109 @@ void TanksContainer::Progress()
 	}
 }
 
-void TanksContainer::ProcessUserControls(sf::RenderWindow& wnd, RocketsContainer& rockets, const MapInterpretation & mapinterpretation)
+void TanksContainer::ProcessUserControls(sf::RenderWindow& wnd, RocketsContainer& rockets, const MapInterpretation & mapinterpretation, int players)
 {
 	for (std::list<Tank*>::const_iterator it = tanks.begin(); it != tanks.end(); it++)
 	{
-		if (((*it)->IsLive()) && ((*it)->GetTeam()==1)) 
-		{ 
-			//(*it)->Progress(); 
-			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
+		if ((*it)->IsLive())
+		{
+			if (players == 1)
 			{
-				(*it)->Push(1);
-			}
-			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
-			{
-				(*it)->Push(3);
-			}
-			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
-			{
-				(*it)->Push(2);
-			}
-			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
-			{
-				(*it)->Push(4);
-			}
-			else
-			{
-				(*it)->Stop();
-			}
+				if ((*it)->GetTeam() == 1)
+				{
+					if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
+					{
+						(*it)->Push(1);
+					}
+					else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
+					{
+						(*it)->Push(3);
+					}
+					else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
+					{
+						(*it)->Push(2);
+					}
+					else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
+					{
+						(*it)->Push(4);
+					}
+					else
+					{
+						(*it)->Stop();
+					}
 
-			if (sf::Keyboard::isKeyPressed(sf::Keyboard::LControl))
+					if (sf::Keyboard::isKeyPressed(sf::Keyboard::LControl))
+					{
+						(*it)->TryShooting(rockets);
+					}
+				}
+			}
+			else  // if players==2
 			{
+				if ((*it)->GetTeam() == 1)
+				{
+					if (sf::Keyboard::isKeyPressed(sf::Keyboard::B))
+					{
+						(*it)->Push(1);
+					}
+					else if (sf::Keyboard::isKeyPressed(sf::Keyboard::C))
+					{
+						(*it)->Push(3);
+					}
+					else if (sf::Keyboard::isKeyPressed(sf::Keyboard::F))
+					{
+						(*it)->Push(2);
+					}
+					else if (sf::Keyboard::isKeyPressed(sf::Keyboard::V))
+					{
+						(*it)->Push(4);
+					}
+					else
+					{
+						(*it)->Stop();
+					}
+
+					if (sf::Keyboard::isKeyPressed(sf::Keyboard::LControl))
+					{
+						(*it)->TryShooting(rockets);
+					}
+				}
+				if ((*it)->GetTeam() == 2)
+				{
+					if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
+					{
+						(*it)->Push(1);
+					}
+					else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
+					{
+						(*it)->Push(3);
+					}
+					else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
+					{
+						(*it)->Push(2);
+					}
+					else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
+					{
+						(*it)->Push(4);
+					}
+					else
+					{
+						(*it)->Stop();
+					}
+
+					if (sf::Keyboard::isKeyPressed(sf::Keyboard::RControl))
+					{
+						(*it)->TryShooting(rockets);
+					}
+				}
+
+			}
+			if ((*it)->GetTeam() == -1)
+			{
+				(*it)->Push((*it)->ai->GetPushDirection(mapinterpretation));
 				(*it)->TryShooting(rockets);
 			}
-		};
-		if (((*it)->IsLive()) && ((*it)->GetTeam() == -1))
-		{
-			(*it)->Push((*it)->ai->GetPushDirection(mapinterpretation));
-			(*it)->TryShooting(rockets);
+
 		}
 	}
 

@@ -69,6 +69,15 @@ void Game::InitializeNewGame(const std::string & filename)
 
 	tanks.CreateTank(Vec2(220.f, 580.f), 1, 2, 1);
 	tank1 = tanks.GetTankAtLocation(Vec2(220.f, 580.f));
+	if (parameters.gameplayers == 1)
+	{
+		tank2 = nullptr;
+	}
+	else
+	{
+		tanks.CreateTank(Vec2(380.f, 580.f), 1, 2, 2);
+		tank2 = tanks.GetTankAtLocation(Vec2(380.f, 580.f));
+	}
 }
 
 /*
@@ -109,34 +118,40 @@ void Game::UpdateModel()
 	if (gamestatus == GameInProgress)
 	{
 		WatersAnimation::loop = (WatersAnimation::loop + 1) % (3 * 16);
-		if ((tanks.GetTeamTanksNumber(1) == 0) && (variables.lifesleft > 0))
+		for (int player = 1; player <= parameters.gameplayers; player++)
 		{
-			// player's tank dead, but there are more lives
-			const Vec2 possible_spawn_locations[2] = { Vec2(220.0f, 580.0f), Vec2(380.0f, 580.0f) };
-			Vec2 try_location = possible_spawn_locations[0];
-			if (tanks.NoTankHere(try_location + Vec2(-15.0f, -15.0f)) && tanks.NoTankHere(try_location + Vec2(15.0f, -15.0f)) &&
-				tanks.NoTankHere(try_location + Vec2(-15.0f, 15.0f)) && tanks.NoTankHere(try_location + Vec2(15.0f, 15.0f)))
+			if ((tanks.GetTeamTanksNumber(player) == 0) && (variables.lifesleft > 0))
 			{
-				// location to the left of eagle is available
-				tanks.CreateTank(try_location, 1, 2, 1);
-				tank1 = tanks.GetTankAtLocation(try_location);
-				variables.lifesleft--;
-				effects.AddVisualEffect(try_location, TANK_CREATION);
-			}
-			else
-			{
-				// try placing to the right of eagle
-				try_location = possible_spawn_locations[1];
+				// player's tank dead, but there are more lives
+				const Vec2 possible_spawn_locations[2] = { Vec2(220.0f + 160.0f*(player-1), 580.0f), Vec2(380.0f - 160.0f*(player-1), 580.0f) };
+				Vec2 try_location = possible_spawn_locations[0];
 				if (tanks.NoTankHere(try_location + Vec2(-15.0f, -15.0f)) && tanks.NoTankHere(try_location + Vec2(15.0f, -15.0f)) &&
 					tanks.NoTankHere(try_location + Vec2(-15.0f, 15.0f)) && tanks.NoTankHere(try_location + Vec2(15.0f, 15.0f)))
 				{
-					tanks.CreateTank(try_location, 1, 2, 1);
-					tank1 = tanks.GetTankAtLocation(try_location);
+					// location to the left of eagle is available
+					tanks.CreateTank(try_location, 1, 2, player);
+					if (player == 1) { tank1 = tanks.GetTankAtLocation(try_location); }
+					else { tank2 = tanks.GetTankAtLocation(try_location); }
 					variables.lifesleft--;
 					effects.AddVisualEffect(try_location, TANK_CREATION);
 				}
+				else
+				{
+					// try placing to the right of eagle
+					try_location = possible_spawn_locations[1];
+					if (tanks.NoTankHere(try_location + Vec2(-15.0f, -15.0f)) && tanks.NoTankHere(try_location + Vec2(15.0f, -15.0f)) &&
+						tanks.NoTankHere(try_location + Vec2(-15.0f, 15.0f)) && tanks.NoTankHere(try_location + Vec2(15.0f, 15.0f)))
+					{
+						tanks.CreateTank(try_location, 1, 2, player);
+						if (player == 1) { tank1 = tanks.GetTankAtLocation(try_location); }
+						else { tank2 = tanks.GetTankAtLocation(try_location); }
+						variables.lifesleft--;
+						effects.AddVisualEffect(try_location, TANK_CREATION);
+					}
+				}
 			}
 		}
+		// Process enemy tanks generation
 		if (variables.tankgenerationcountdown == 0)
 		{
 			// create a new enemy tank
@@ -165,7 +180,13 @@ void Game::UpdateModel()
 			while (tryagain)
 			{
 				newbonuspos = Vec2(Vei2((rand() % 14) * 40 + 40, (rand() % 14) * 40 + 40));
-				if (((tank1->GetPos() - newbonuspos).LInfNorm() > 60) && ((eagle->GetPos() - newbonuspos).LInfNorm() > 100)) { tryagain = false; }
+				tryagain = false;
+				if ((eagle->GetPos() - newbonuspos).LInfNorm() <= 100) tryagain = true;
+				if (tank1->IsLive()) { if ((tank1->GetPos() - newbonuspos).LInfNorm() <= 60) tryagain = true; }
+				if (parameters.gameplayers == 2)
+				{
+					if (tank2->IsLive()) { if ((tank2->GetPos() - newbonuspos).LInfNorm() <= 60) tryagain = true; }
+				}
 			}
 			bonuses.CreateBonus(new Bonus(newbonuspos, parameters.bonusgenerationsequence[variables.bonusgenerationnumber % parameters.bonusgenerationsequence.size()], parameters.BONUSLIFEDURATION));
 			variables.bonusgenerationnumber++;
@@ -203,20 +224,39 @@ void Game::UpdateModel()
 
 		tanks.Progress();
 
-		tanks.ProcessUserControls(wnd, rockets, mapinterpretation);
+		tanks.ProcessUserControls(wnd, rockets, mapinterpretation, parameters.gameplayers);
 
 		rockets.ProcessRockets(mapobjects, tanks, effects);
 
 
 		// Bonuses require special treatment, hence they are in this top layer
-		Bonus* consumedbonus = bonuses.GetTouchedBonus(tank1->GetPos());
+		Bonus* consumedbonus = nullptr;
+		if (tank1->IsLive())
+		{
+			consumedbonus = bonuses.GetTouchedBonus(tank1->GetPos());
+		}
+		if (parameters.gameplayers == 2)
+		{
+			if ((consumedbonus == nullptr) && (tank2->IsLive()))
+			{
+				consumedbonus = bonuses.GetTouchedBonus(tank2->GetPos());
+			}
+		}
 		if (consumedbonus != nullptr)
 		{
 			int bonuskind = consumedbonus->GetKind();
-			consumedbonus->Eliminate();
+			consumedbonus->Eliminate();  // Cleaned the bonus from map and memory
 			if (bonuskind == 1) { variables.lifesleft++; }
-			if (bonuskind == 2) { tank1->ConsumeRevolver(); };
-			if (bonuskind == 3) { tank1->ConsumeShield(); };
+			if (bonuskind == 2) 
+			{ 
+				if (tank1->IsLive()) { tank1->ConsumeRevolver(); } 
+				if (parameters.gameplayers == 2) { if (tank2->IsLive()) { tank2->ConsumeRevolver(); } }
+			};
+			if (bonuskind == 3) 
+			{ 
+				if (tank1->IsLive()) { tank1->ConsumeShield(); }
+				if (parameters.gameplayers == 2) { if (tank2->IsLive()) { tank2->ConsumeShield(); } }
+			};
 			if (bonuskind == 4) { tanks.BlowUpTeam(-1, effects); }
 			if (bonuskind == 5)
 			{
@@ -267,7 +307,7 @@ void Game::UpdateModel()
 
 		effects.EvolveVisualEffects();
 
-		if (sf::Keyboard::isKeyPressed(sf::Keyboard::B))  // B key
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Q))  // Q key
 		{
 			variables._soilon = !variables._soilon;
 		}
@@ -277,7 +317,7 @@ void Game::UpdateModel()
 			gamestatus = Pause;
 		}
 
-		if (((tanks.GetTeamTanksNumber(1) == 0) && (variables.lifesleft == 0)) || (eagle->exists == false))
+		if (((tanks.GetTeamTanksNumber(1) == 0) && (tanks.GetTeamTanksNumber(2) == 0) && (variables.lifesleft == 0)) || (eagle->exists == false))
 		{
 			variables.endgametimer--;
 			if (variables.endgametimer <= 0) gamestatus = GameOver;
@@ -330,7 +370,7 @@ void Game::UpdateModel()
 	else if (gamestatus == OptionsConfig)
 	{
 		if (timertocursormove > 0) { timertocursormove--; }
-		if (cursor > 2) { cursor = 2; }
+		if (cursor > 3) { cursor = 3; }
 		if (cursor < 0) { cursor = 0; }
 		if (timertocursormove <= 0)
 		{
@@ -341,7 +381,7 @@ void Game::UpdateModel()
 			}
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
 			{
-				if (cursor < 2) { cursor++; }
+				if (cursor < 3) { cursor++; }
 				timertocursormove = 5;
 			}
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
@@ -361,7 +401,12 @@ void Game::UpdateModel()
 				}
 				if (cursor == 2)
 				{
-					if (parameters.TANKGENERATIONINTERVAL < 20 * (1000 / MainConstants::MS_PER_UPDATE)) { parameters.TANKGENERATIONINTERVAL+=(1000 / MainConstants::MS_PER_UPDATE); }
+					if (parameters.TANKGENERATIONINTERVAL < 20 * (1000 / MainConstants::MS_PER_UPDATE)) { parameters.TANKGENERATIONINTERVAL += (1000 / MainConstants::MS_PER_UPDATE); }
+					timertocursormove = 5;
+				}
+				if (cursor == 3)
+				{
+					parameters.gameplayers=2;
 					timertocursormove = 5;
 				}
 			}
@@ -385,6 +430,11 @@ void Game::UpdateModel()
 					if (parameters.TANKGENERATIONINTERVAL > 3 * (1000 / MainConstants::MS_PER_UPDATE)) { parameters.TANKGENERATIONINTERVAL -= (1000 / MainConstants::MS_PER_UPDATE); }
 					timertocursormove = 5;
 				}
+				if (cursor == 3)
+				{
+					parameters.gameplayers = 1;
+					timertocursormove = 5;
+				}
 			}
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Return))
 			{
@@ -402,6 +452,11 @@ void Game::UpdateModel()
 				}
 				if (cursor == 2)
 				{
+					timertocursormove = 5;
+				}
+				if (cursor == 3)
+				{
+					parameters.gameplayers = 3 - parameters.gameplayers;
 					timertocursormove = 5;
 				}
 			}
@@ -530,6 +585,21 @@ void Game::ComposeFrame()
 			kprint(std::to_string(variables.fortresstimer / 50), Vei2(760, 225), consolasfont, (variables.fortresstimer < 150) ? sf::Color::Red : sf::Color::Green, wnd);
 		}
 
+		if (parameters.gameplayers == 2)
+		{
+			if (tank2->RevolverTimer() > 0)
+			{
+				DrawSpriteChromaCentered(wnd, Vei2(650, 270), BonusesContainer::bonusesbitmap, RectI(Vei2(40, 0), Vei2(79, 39)));
+				kprint(std::to_string(tank2->RevolverTimer() / 50), Vei2(640, 295), consolasfont, (tank2->RevolverTimer() < 150) ? sf::Color::Red : sf::Color::Green, wnd);
+			}
+
+			if (tank2->ShieldTimer() > 0)
+			{
+				DrawSpriteChromaCentered(wnd, Vei2(710, 270), BonusesContainer::bonusesbitmap, RectI(Vei2(0, 40), Vei2(39, 79)));
+				kprint(std::to_string(tank2->ShieldTimer() / 50), Vei2(700, 295), consolasfont, (tank2->ShieldTimer() < 150) ? sf::Color::Red : sf::Color::Green, wnd);
+			}
+		}
+
 		kprint("Tanks ttl " + std::to_string(tanks.tanks.size()), Vei2(640, 395), consolasfont, sf::Color::Blue, wnd);
 		kprint("UPF: " + std::to_string(performancestats.MODELUPDATESPERFRAMEUPDATE), Vei2(640, 420), consolasfont, sf::Color::Blue, wnd);
 		kprint("ModUpdMS: " + std::to_string(performancestats.MSPERMODELUPDATE), Vei2(640, 445), consolasfont, sf::Color::Blue, wnd);
@@ -568,6 +638,8 @@ void Game::ComposeFrame()
 		kprint(std::to_string(parameters.MAX_ENEMY_TANKS), Vei2(400, 175), consolasfont, sf::Color::Green, wnd);
 		kprint("Enemy Spawn time:", Vei2(150, 200), consolasfont, sf::Color::Green, wnd);
 		kprint(std::to_string(parameters.TANKGENERATIONINTERVAL / (1000 / MainConstants::MS_PER_UPDATE)) + " seconds", Vei2(400, 200), consolasfont, sf::Color::Green, wnd);
+		kprint("Number of Players:", Vei2(150, 225), consolasfont, sf::Color::Green, wnd);
+		kprint(parameters.gameplayers==1 ? "Solo" : "Bros", Vei2(400, 225), consolasfont, sf::Color::Green, wnd);
 		DrawSpriteChromaCentered(wnd, Vei2(140, 150 + 20 + cursor * 25), Rocket::rocketsbitmap, RectI(Vei2(0, 0), Vei2(19, 19)));
 
 		// Draw enemy army

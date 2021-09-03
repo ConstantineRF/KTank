@@ -77,7 +77,7 @@ public:
 	bool NoTankHere(const Vec2& inpos) const;
 	void Refill();
 	void Progress();
-	void ProcessUserControls(sf::RenderWindow& wnd, RocketsContainer& rockets, const MapInterpretation& mapinterpretation);
+	void ProcessUserControls(sf::RenderWindow& wnd, RocketsContainer& rockets, const MapInterpretation& mapinterpretation, int players);
 	void Move(const MapObjectsContainer& mapobjects);
 	void Draw(sf::RenderWindow& wnd) const;
 	void MakeEmpty();
