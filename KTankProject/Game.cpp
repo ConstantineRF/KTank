@@ -619,7 +619,7 @@ void Game::ComposeFrame()
 	else if (gamestatus == MainMenu)
 	{
 		kprint("TANK GAME", Vei2(340, 50), consolasfont, sf::Color::Green, wnd);
-		kprint("Version 0", Vei2(340, 75), consolasfont, sf::Color::Green, wnd);
+		kprint("Version 1", Vei2(340, 75), consolasfont, sf::Color::Green, wnd);
 		kprint("Play", Vei2(275, 150), consolasfont, sf::Color::Green, wnd);
 		kprint("Options", Vei2(275, 175), consolasfont, sf::Color::Green, wnd);
 
@@ -661,7 +661,7 @@ void Game::ComposeFrame()
 		//gfx.DrawSpriteChromaCenteredRotated(Vei2(400, 50), TanksContainer::redtankbitmap, RectI(Vei2(0, 0), Vei2(38, 38)), 1, Colors::White, RectI(Vei2(0, 0), Vei2(gfx.ScreenWidth - 1, gfx.ScreenHeight - 1)));
 		
 		kprint("TANK GAME", Vei2(340, 50), consolasfont, sf::Color::Green, wnd);
-		kprint("Version 0", Vei2(340, 75), consolasfont, sf::Color::Green, wnd);
+		kprint("Version 1", Vei2(340, 75), consolasfont, sf::Color::Green, wnd);
 
 		if (numberofmaps > 0)
 		{

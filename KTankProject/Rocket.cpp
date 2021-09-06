@@ -64,7 +64,7 @@ void RocketsContainer::ProcessRockets(MapObjectsContainer & mapobjects, TanksCon
 		{
 			for (std::list<Rocket*>::iterator another = rockets.begin(); another != rockets.end(); another++)
 			{
-				if (((*it) != (*another)) && (((*it)->GetPos() - (*another)->GetPos()).LengthSq() < 36))
+				if (((*it) != (*another)) && (((*it)->GetPos() - (*another)->GetPos()).LengthSq() < 16))
 				{
 					effects.AddVisualEffect((*it)->GetPos(), ROCKET_EXPLOSION);
 					effects.AddVisualEffect((*another)->GetPos(), ROCKET_EXPLOSION);
