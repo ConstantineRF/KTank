@@ -129,7 +129,7 @@ void Game::UpdateModel()
 					tanks.NoTankHere(try_location + Vec2(-15.0f, 15.0f)) && tanks.NoTankHere(try_location + Vec2(15.0f, 15.0f)))
 				{
 					// location to the left of eagle is available
-					tanks.CreateTank(try_location, 1, 2, player);
+					tanks.CreateTank(try_location, 9, 2, player);
 					if (player == 1) { tank1 = tanks.GetTankAtLocation(try_location); }
 					else { tank2 = tanks.GetTankAtLocation(try_location); }
 					variables.lifesleft--;
@@ -142,7 +142,7 @@ void Game::UpdateModel()
 					if (tanks.NoTankHere(try_location + Vec2(-15.0f, -15.0f)) && tanks.NoTankHere(try_location + Vec2(15.0f, -15.0f)) &&
 						tanks.NoTankHere(try_location + Vec2(-15.0f, 15.0f)) && tanks.NoTankHere(try_location + Vec2(15.0f, 15.0f)))
 					{
-						tanks.CreateTank(try_location, 1, 2, player);
+						tanks.CreateTank(try_location, 9, 2, player);
 						if (player == 1) { tank1 = tanks.GetTankAtLocation(try_location); }
 						else { tank2 = tanks.GetTankAtLocation(try_location); }
 						variables.lifesleft--;
