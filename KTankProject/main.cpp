@@ -7,7 +7,7 @@
 int main()
 {
 	std::cout << " *** K-TANK GAME LOADING ***" << std::endl;
-	std::cout << "DEV Version 20210826 by Konstantin Kalinchenko" << std::endl;
+	std::cout << "DEV Version 20210913 by Konstantin Kalinchenko" << std::endl;
 	sf::RenderWindow window(sf::VideoMode(800, 600), "K-Tank!", sf::Style::Fullscreen);
 	Game game(window);
 	std::cout << "Loading graphics..." << std::endl;
@@ -15,6 +15,7 @@ int main()
 	if (!TanksContainer::bluetankbitmap.loadFromFile("graphics\\BlueTank.png")) { std::cout << "ERROR Cannot load BlueTank.png" << std::endl; };
 	if (!TanksContainer::redtankbitmap.loadFromFile("graphics\\RedTank.png")) { std::cout << "ERROR Cannot load RedTank.png" << std::endl; };
 	if (!TanksContainer::greentankbitmap.loadFromFile("graphics\\GreenTank.png")) { std::cout << "ERROR Cannot load GreenTank.png" << std::endl; };
+	if (!TanksContainer::orangetankbitmap.loadFromFile("graphics\\OrangeTank.png")) { std::cout << "ERROR Cannot load OrangeTank.png" << std::endl; };
 	if (!Rocket::rocketsbitmap.loadFromFile("graphics\\rockets.png")) { std::cout << "ERROR Cannot load rockets.png" << std::endl; };
 	if (!MapObjectsContainer::mapobjectsbitmap.loadFromFile("graphics\\mapobjects.png")) { std::cout << "ERROR Cannot load mapobjects.png" << std::endl; };
 	if (!Water::waterbitmap.loadFromFile("graphics\\DynamicWater.png")) { std::cout << "ERROR Cannot load DynamicWater.png" << std::endl; };

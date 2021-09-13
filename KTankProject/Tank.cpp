@@ -6,6 +6,7 @@ sf::Texture TanksContainer::basictankbitmap;
 sf::Texture TanksContainer::bluetankbitmap;
 sf::Texture TanksContainer::redtankbitmap;
 sf::Texture TanksContainer::greentankbitmap;
+sf::Texture TanksContainer::orangetankbitmap;
 
 Tank::Tank(const Vec2& inpos, int inkind, int inor, float inV, int inteam) : pos(inpos), kind(inkind), orientation(inor), V(inV), team(inteam), velocity(0,0), dpush(0), gas(inV), 
 rechargetimer(0), freezetimer(100), shieldtimer(100), revolvertimer(0), islive(true)
@@ -14,6 +15,7 @@ rechargetimer(0), freezetimer(100), shieldtimer(100), revolvertimer(0), islive(t
 	else if (kind == 1) { life = 1; rechargeduration = 30; }
 	else if (kind == 2) { life = 2; rechargeduration = 40; }
 	else if (kind == 3) { life = 3; rechargeduration = 60; }
+	else if (kind == 9) { life = 1; rechargeduration = 30; }
 	else { life = 1; rechargeduration = 30; }
 	if (inteam == 1) { ai = nullptr; }
 	else { ai = new MachineBrain(this); }
@@ -26,6 +28,7 @@ rechargetimer(0), freezetimer(100), shieldtimer(100), revolvertimer(0), islive(t
 	else if (kind == 1) { V = 2.5f; life = 1; rechargeduration = 30; }
 	else if (kind == 2) { V = 2.0f; life = 2; rechargeduration = 40; }
 	else if (kind == 3) { V = 1.5f; life = 3; rechargeduration = 60; }
+	else if (kind == 9) { V = 2.5f; life = 1; rechargeduration = 30; }
 	else { V = 2.5f; life = 1; rechargeduration = 30; }
 	gas = V;
 	if (inteam == 1) { ai = nullptr; }
@@ -184,6 +187,7 @@ void Tank::Draw(sf::RenderWindow& wnd) const
 	if (kind == 1) DrawSpriteChromaCenteredRotated(wnd, Vei2(pos), TanksContainer::bluetankbitmap, RectI(Vei2(0, 0), Vei2(39, 39)), GetOrientation());
 	if (kind == 2) DrawSpriteChromaCenteredRotated(wnd, Vei2(pos), TanksContainer::redtankbitmap, RectI(Vei2(0, 0), Vei2(38, 38)), GetOrientation());
 	if (kind == 3) DrawSpriteChromaCenteredRotated(wnd, Vei2(pos), TanksContainer::greentankbitmap, RectI(Vei2(0, 0), Vei2(49, 39)), GetOrientation());
+	if (kind == 9) DrawSpriteChromaCenteredRotated(wnd, Vei2(pos), TanksContainer::orangetankbitmap, RectI(Vei2(0, 0), Vei2(39, 39)), GetOrientation());
 	/*
 	if (kind == 1) 
 	{

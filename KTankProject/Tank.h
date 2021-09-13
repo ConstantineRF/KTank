@@ -87,6 +87,7 @@ public:  // tanks are revealed intentionally
 	static sf::Texture bluetankbitmap;
 	static sf::Texture redtankbitmap;
 	static sf::Texture greentankbitmap;
+	static sf::Texture orangetankbitmap;
 };
 
 

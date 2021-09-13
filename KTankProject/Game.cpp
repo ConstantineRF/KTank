@@ -67,7 +67,7 @@ void Game::InitializeNewGame(const std::string & filename)
 
 	mapobjects.InterpretMap(mapinterpretation);
 
-	tanks.CreateTank(Vec2(220.f, 580.f), 1, 2, 1);
+	tanks.CreateTank(Vec2(220.f, 580.f), 9, 2, 1);
 	tank1 = tanks.GetTankAtLocation(Vec2(220.f, 580.f));
 	if (parameters.gameplayers == 1)
 	{
@@ -75,7 +75,7 @@ void Game::InitializeNewGame(const std::string & filename)
 	}
 	else
 	{
-		tanks.CreateTank(Vec2(380.f, 580.f), 1, 2, 2);
+		tanks.CreateTank(Vec2(380.f, 580.f), 9, 2, 2);
 		tank2 = tanks.GetTankAtLocation(Vec2(380.f, 580.f));
 	}
 }
@@ -703,9 +703,9 @@ void Game::ComposeFrame()
 	{
 		kprint("YOU WON!!!", Vei2(335, 100), consolasfont, sf::Color::Yellow, wnd);
 
-		DrawSpriteChromaCenteredRotated(wnd, Vei2(360, 220), TanksContainer::bluetankbitmap, RectI(Vei2(0, 0), Vei2(39, 39)), 2);
+		DrawSpriteChromaCenteredRotated(wnd, Vei2(360, 220), TanksContainer::orangetankbitmap, RectI(Vei2(0, 0), Vei2(39, 39)), 2);
 		DrawSpriteChromaCentered(wnd, Vei2(400, 220), MapObjectsContainer::mapobjectsbitmap, RectI(Vei2(120, 0), Vei2(159, 39)));
-		DrawSpriteChromaCenteredRotated(wnd, Vei2(440, 220), TanksContainer::bluetankbitmap, RectI(Vei2(0, 0), Vei2(39, 39)), 2);
+		DrawSpriteChromaCenteredRotated(wnd, Vei2(440, 220), TanksContainer::orangetankbitmap, RectI(Vei2(0, 0), Vei2(39, 39)), 2);
 
 		kprint("Try another map with accumulated lifes!", Vei2(160, 125), consolasfont, sf::Color::Yellow, wnd);
 		kprint("Press SPACE for main menu", Vei2(230, 500), consolasfont, sf::Color::Yellow, wnd);
