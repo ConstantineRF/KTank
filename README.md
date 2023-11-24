@@ -4,7 +4,7 @@ KTank is an arcade game, developed by Konstantin Kalinchenko in 2021 for Windows
 where one or two players take control over their tanks to defend a fort with eagle against an enemy swarm of tanks on a single screen map.
 Despite some differences with the original game, Konstantin aimed to replicate the chaotic behavior of the enemy tanks, while mixing it
 with a deliberate progression toward the eagle using modified Dijkstra algorithm. There is also a twist in the game: the slowest and most 
-armored enemy tanks, generally spawning closer to the end of each level, have minimal amount of randomness in their pathfinding, hance requiring
+armored enemy tanks, generally spawning closer to the end of each level, have minimal amount of randomness in their pathfinding, hence requiring
 player to quickly adjust strategy. It might be even possible that earlier destructions of map objects will make the task of eagle defence
 nearly impossible, so plan ahead!
 ## Controls
